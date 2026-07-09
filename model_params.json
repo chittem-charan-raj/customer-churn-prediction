@@ -1,0 +1,214 @@
+{
+  "intercept": -0.5097138687931482,
+  "numeric": [
+    {
+      "name": "tenure",
+      "mean": 32.37114865824223,
+      "scale": 24.55773742286344,
+      "coef": -1.317201956520255
+    },
+    {
+      "name": "MonthlyCharges",
+      "mean": 64.76169246059918,
+      "scale": 30.087910854936975,
+      "coef": -0.1617700040524623
+    },
+    {
+      "name": "TotalCharges",
+      "mean": 2279.7343035638223,
+      "scale": 2266.6335386271107,
+      "coef": 0.6333861464688999
+    },
+    {
+      "name": "NumAddOnServices",
+      "mean": 2.0379099815419566,
+      "scale": 1.8475505016147948,
+      "coef": 0.06768433476827031,
+      "source_toggles": [
+        "OnlineSecurity",
+        "OnlineBackup",
+        "DeviceProtection",
+        "TechSupport",
+        "StreamingTV",
+        "StreamingMovies"
+      ]
+    },
+    {
+      "name": "SeniorCitizen",
+      "mean": 0.1621468124378816,
+      "scale": 0.36858543603093713,
+      "coef": 0.08137275455409877
+    }
+  ],
+  "categorical": [
+    {
+      "name": "gender",
+      "categories": [
+        "Female",
+        "Male"
+      ],
+      "coefs": {
+        "Male": -0.016896155915258698
+      }
+    },
+    {
+      "name": "Partner",
+      "categories": [
+        "No",
+        "Yes"
+      ],
+      "coefs": {
+        "Yes": -0.011700946148431316
+      }
+    },
+    {
+      "name": "Dependents",
+      "categories": [
+        "No",
+        "Yes"
+      ],
+      "coefs": {
+        "Yes": -0.15634286171485792
+      }
+    },
+    {
+      "name": "PhoneService",
+      "categories": [
+        "No",
+        "Yes"
+      ],
+      "coefs": {
+        "Yes": -0.4608360507446292
+      }
+    },
+    {
+      "name": "MultipleLines",
+      "categories": [
+        "No",
+        "Yes"
+      ],
+      "coefs": {
+        "Yes": 0.2356745154093128
+      }
+    },
+    {
+      "name": "InternetService",
+      "categories": [
+        "DSL",
+        "Fiber optic",
+        "No"
+      ],
+      "coefs": {
+        "DSL": -0.08733507729318861,
+        "Fiber optic": 0.7655148553482871,
+        "No": -1.0143530089199904
+      }
+    },
+    {
+      "name": "OnlineSecurity",
+      "categories": [
+        "No",
+        "Yes"
+      ],
+      "coefs": {
+        "Yes": -0.40323602066605807
+      }
+    },
+    {
+      "name": "OnlineBackup",
+      "categories": [
+        "No",
+        "Yes"
+      ],
+      "coefs": {
+        "Yes": -0.16875241592868467
+      }
+    },
+    {
+      "name": "DeviceProtection",
+      "categories": [
+        "No",
+        "Yes"
+      ],
+      "coefs": {
+        "Yes": -0.08131332222199435
+      }
+    },
+    {
+      "name": "TechSupport",
+      "categories": [
+        "No",
+        "Yes"
+      ],
+      "coefs": {
+        "Yes": -0.35939984425215604
+      }
+    },
+    {
+      "name": "StreamingTV",
+      "categories": [
+        "No",
+        "Yes"
+      ],
+      "coefs": {
+        "Yes": 0.2189544800949564
+      }
+    },
+    {
+      "name": "StreamingMovies",
+      "categories": [
+        "No",
+        "Yes"
+      ],
+      "coefs": {
+        "Yes": 0.23370656691968364
+      }
+    },
+    {
+      "name": "Contract",
+      "categories": [
+        "Month-to-month",
+        "One year",
+        "Two year"
+      ],
+      "coefs": {
+        "Month-to-month": 0.5984635716461688,
+        "One year": -0.09524422557075513,
+        "Two year": -0.8393925769403072
+      }
+    },
+    {
+      "name": "PaperlessBilling",
+      "categories": [
+        "No",
+        "Yes"
+      ],
+      "coefs": {
+        "Yes": 0.31278489350039607
+      }
+    },
+    {
+      "name": "PaymentMethod",
+      "categories": [
+        "Bank transfer (automatic)",
+        "Credit card (automatic)",
+        "Electronic check",
+        "Mailed check"
+      ],
+      "coefs": {
+        "Bank transfer (automatic)": -0.13544983411854805,
+        "Credit card (automatic)": -0.1957828565641937,
+        "Electronic check": 0.19256181179252524,
+        "Mailed check": -0.19750235197466273
+      }
+    }
+  ],
+  "addon_cols": [
+    "OnlineSecurity",
+    "OnlineBackup",
+    "DeviceProtection",
+    "TechSupport",
+    "StreamingTV",
+    "StreamingMovies"
+  ]
+}

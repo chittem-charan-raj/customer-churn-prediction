@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ChurnGuard — Customer Risk Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3F5F7;
+    --surface:#FFFFFF;
+    --border:#E1E6EA;
+    --ink:#16232E;
+    --muted:#5B6B79;
+    --accent:#0E6E64;
+    --accent-soft:#E3F0EE;
+    --low:#1E7F4F;
+    --low-soft:#E7F5ED;
+    --medium:#B6740B;
+    --medium-soft:#FBF0DD;
+    --high:#B23A33;
+    --high-soft:#FBEAE8;
+    --radius:8px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', -apple-system, Segoe UI, sans-serif;
+    font-size:14px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 28px;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:30px;height:30px;border-radius:7px;
+    background:linear-gradient(135deg, var(--accent), #0A4A43);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:14px;font-family:'IBM Plex Mono',monospace;
+    flex-shrink:0;
+  }
+  .brand-text{display:flex;flex-direction:column;line-height:1.15;}
+  .brand-name{font-weight:700;font-size:15px;letter-spacing:.2px;}
+  .brand-sub{font-size:11.5px;color:var(--muted);}
+  .context-tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;font-weight:600;letter-spacing:.06em;
+    color:var(--accent);background:var(--accent-soft);
+    padding:5px 10px;border-radius:5px;
+  }
+
+  /* ---------- layout ---------- */
+  .layout{
+    max-width:1180px;margin:0 auto;
+    display:grid;grid-template-columns:1.35fr 1fr;gap:20px;
+    padding:24px 28px 60px;
+    align-items:start;
+  }
+  @media (max-width: 880px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px 20px 20px;
+    margin-bottom:16px;
+  }
+  .card-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;font-weight:600;letter-spacing:.08em;
+    color:var(--muted);text-transform:uppercase;
+    margin:0 0 4px;
+  }
+  .card-title{font-size:16px;font-weight:600;margin:0 0 14px;}
+
+  .field-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;
+  }
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field.span2{grid-column:1 / -1;}
+  .field label{font-size:12.5px;color:var(--muted);font-weight:500;}
+  .field input[type=number], .field select{
+    font-family:inherit;font-size:13.5px;color:var(--ink);
+    border:1px solid var(--border);border-radius:6px;
+    padding:8px 10px;background:#fff;
+    transition:border-color .15s;
+  }
+  .field input[type=number]:focus, .field select:focus{
+    outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  .readonly-display{
+    font-family:'IBM Plex Mono',monospace;font-size:13.5px;
+    padding:8px 10px;background:#F7F9FA;border:1px solid var(--border);
+    border-radius:6px;color:var(--muted);
+  }
+
+  /* toggle switch */
+  .toggle-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:4px 0;
+  }
+  .toggle-row label{font-size:13px;color:var(--ink);font-weight:500;}
+  .toggle-row .hint{font-size:11px;color:var(--muted);font-weight:400;display:block;}
+  .switch{position:relative;width:42px;height:24px;flex-shrink:0;}
+  .switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:2;}
+  .switch .track{
+    position:absolute;inset:0;background:#D5DBE0;border-radius:999px;
+    transition:background .15s;
+  }
+  .switch .thumb{
+    position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);
+    transition:transform .15s;
+  }
+  .switch input:checked + .track{background:var(--accent);}
+  .switch input:checked + .track + .thumb{transform:translateX(18px);}
+  .switch input:focus-visible + .track{box-shadow:0 0 0 3px var(--accent-soft);}
+  .field-disabled{opacity:.45;}
+  .field-disabled .switch input{cursor:not-allowed;}
+
+  .divider-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.07em;
+    margin:14px 0 8px;display:flex;align-items:center;gap:8px;
+  }
+  .divider-label::after{content:"";flex:1;height:1px;background:var(--border);}
+
+  /* ---------- risk column ---------- */
+  .risk-col{position:sticky;top:24px;}
+  .risk-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:24px 22px;text-align:center;margin-bottom:16px;
+  }
+  .risk-score{
+    font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:52px;
+    line-height:1;transition:color .25s;
+  }
+  .risk-tier{
+    display:inline-block;margin-top:8px;padding:4px 12px;border-radius:999px;
+    font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+    transition:background .25s, color .25s;
+  }
+  .risk-meter{
+    margin-top:16px;height:8px;border-radius:999px;background:#E9ECEF;position:relative;overflow:hidden;
+  }
+  .risk-meter-fill{height:100%;border-radius:999px;transition:width .25s, background .25s;}
+
+  .factors-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:18px 20px;margin-bottom:16px;
+  }
+  .factors-card h3{font-size:13px;font-weight:600;margin:0 0 4px;}
+  .factors-sub{font-size:11.5px;color:var(--muted);margin:0 0 14px;}
+  .factor-row{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:10px;margin-bottom:9px;}
+  .factor-label{font-size:11.5px;color:var(--ink);text-align:right;line-height:1.25;}
+  .factor-track{position:relative;height:16px;}
+  .factor-track::before{
+    content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border);
+  }
+  .factor-bar{
+    position:absolute;top:3px;height:10px;border-radius:3px;
+    transition:width .25s, left .25s;
+  }
+  .factor-bar.risk{background:var(--high);}
+  .factor-bar.protect{background:var(--low);}
+
+  .action-card{
+    border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);
+    transition:background .25s, border-color .25s;
+  }
+  .action-card h3{font-size:12px;font-weight:600;margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em;}
+  .action-card p{margin:0;font-size:13px;line-height:1.5;}
+
+  .footnote{font-size:11px;color:var(--muted);margin-top:14px;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">CG</div>
+    <div class="brand-text">
+      <span class="brand-name">ChurnGuard</span>
+      <span class="brand-sub">Customer Risk Assessment</span>
+    </div>
+  </div>
+  <div class="context-tag">TELECOM RETENTION DESK</div>
+</div>
+
+<div class="layout">
+  <!-- ===================== FORM COLUMN ===================== -->
+  <section class="form-col">
+
+    <div class="card">
+      <p class="card-eyebrow">Account</p>
+      <h2 class="card-title">Plan &amp; billing</h2>
+      <div class="field-grid">
+        <div class="field">
+          <label for="tenure">Tenure (months)</label>
+          <input type="number" id="tenure" min="0" max="72" value="8" />
+        </div>
+        <div class="field">
+          <label for="MonthlyCharges">Monthly charges ($)</label>
+          <input type="number" id="MonthlyCharges" min="0" max="200" step="0.01" value="84.50" />
+        </div>
+        <div class="field">
+          <label for="Contract">Contract</label>
+          <select id="Contract">
+            <option value="Month-to-month">Month-to-month</option>
+            <option value="One year">One year</option>
+            <option value="Two year">Two year</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="PaymentMethod">Payment method</label>
+          <select id="PaymentMethod">
+            <option value="Electronic check">Electronic check</option>
+            <option value="Mailed check">Mailed check</option>
+            <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
+            <option value="Credit card (automatic)">Credit card (automatic)</option>
+          </select>
+        </div>
+        <div class="field span2">
+          <label>Total billed to date</label>
+          <div class="readonly-display" id="TotalChargesDisplay">$676.00</div>
+        </div>
+      </div>
+      <div class="divider-label">Billing preference</div>
+      <div class="toggle-row">
+        <label for="PaperlessBilling">Paperless billing</label>
+        <span class="switch">
+          <input type="checkbox" id="PaperlessBilling" />
+          <span class="track"></span><span class="thumb"></span>
+        </span>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-eyebrow">Services</p>
+      <h2 class="card-title">Subscribed services</h2>
+
+      <div class="toggle-row">
+        <label for="PhoneService">Phone service</label>
+        <span class="switch">
+          <input type="checkbox" id="PhoneService" checked />
+          <span class="track"></span><span class="thumb"></span>
+        </span>
+      </div>
+      <div class="toggle-row" id="row-MultipleLines">
+        <label for="MultipleLines">Multiple lines</label>
+        <span class="switch">
+          <input type="checkbox" id="MultipleLines" />
+          <span class="track"></span><span class="thumb"></span>
+        </span>
+      </div>
+
+      <div class="divider-label">Internet</div>
+      <div class="field" style="margin-bottom:10px;">
+        <label for="InternetService">Internet service</label>
+        <select id="InternetService">
+          <option value="DSL">DSL</option>
+          <option value="Fiber optic" selected>Fiber optic</option>
+          <option value="No">No internet service</option>
+        </select>
+      </div>
+      <div id="addon-toggles">
+        <div class="toggle-row" data-addon>
+          <label for="OnlineSecurity">Online security</label>
+          <span class="switch"><input type="checkbox" id="OnlineSecurity" /><span class="track"></span><span class="thumb"></span></span>
+        </div>
+        <div class="toggle-row" data-addon>
+          <label for="OnlineBackup">Online backup</label>
+          <span class="switch"><input type="checkbox" id="OnlineBackup" /><span class="track"></span><span class="thumb"></span></span>
+        </div>
+        <div class="toggle-row" data-addon>
+          <label for="DeviceProtection">Device protection</label>
+          <span class="switch"><input type="checkbox" id="DeviceProtection" /><span class="track"></span><span class="thumb"></span></span>
+        </div>
+        <div class="toggle-row" data-addon>
+          <label for="TechSupport">Tech support</label>
+          <span class="switch"><input type="checkbox" id="TechSupport" /><span class="track"></span><span class="thumb"></span></span>
+        </div>
+        <div class="toggle-row" data-addon>
+          <label for="StreamingTV">Streaming TV</label>
+          <span class="switch"><input type="checkbox" id="StreamingTV" /><span class="track"></span><span class="thumb"></span></span>
+        </div>
+        <div class="toggle-row" data-addon>
+          <label for="StreamingMovies">Streaming movies</label>
+          <span class="switch"><input type="checkbox" id="StreamingMovies" /><span class="track"></span><span class="thumb"></span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-eyebrow">Demographics</p>
+      <h2 class="card-title">Household</h2>
+      <div class="toggle-row">
+        <label for="gender">Male</label>
+        <span class="switch"><input type="checkbox" id="gender" /><span class="track"></span><span class="thumb"></span></span>
+      </div>
+      <div class="toggle-row">
+        <label for="SeniorCitizen">Senior citizen (65+)</label>
+        <span class="switch"><input type="checkbox" id="SeniorCitizen" /><span class="track"></span><span class="thumb"></span></span>
+      </div>
+      <div class="toggle-row">
+        <label for="Partner">Has partner</label>
+        <span class="switch"><input type="checkbox" id="Partner" /><span class="track"></span><span class="thumb"></span></span>
+      </div>
+      <div class="toggle-row">
+        <label for="Dependents">Has dependents</label>
+        <span class="switch"><input type="checkbox" id="Dependents" /><span class="track"></span><span class="thumb"></span></span>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ===================== RISK COLUMN ===================== -->
+  <aside class="risk-col">
+    <div class="risk-card">
+      <div class="risk-score mono" id="riskScore">--%</div>
+      <div class="risk-tier" id="riskTier">—</div>
+      <div class="risk-meter"><div class="risk-meter-fill" id="riskMeterFill"></div></div>
+    </div>
+
+    <div class="factors-card">
+      <h3>Top factors for this customer</h3>
+      <p class="factors-sub">Red pushes risk up · green pulls it down</p>
+      <div id="factorsList"></div>
+    </div>
+
+    <div class="action-card" id="actionCard">
+      <h3>Recommended action</h3>
+      <p id="actionText">—</p>
+    </div>
+
+    <p class="footnote">Probabilities from a logistic regression trained on historical churn outcomes. A model output, not a guarantee — use judgment.</p>
+  </aside>
+</div>
+
+<script>
+/* MODEL_PARAMS is injected by churn_pipeline.py at generation time. */
+const MODEL_PARAMS = {"intercept": -0.5097138687931482, "numeric": [{"name": "tenure", "mean": 32.37114865824223, "scale": 24.55773742286344, "coef": -1.317201956520255}, {"name": "MonthlyCharges", "mean": 64.76169246059918, "scale": 30.087910854936975, "coef": -0.1617700040524623}, {"name": "TotalCharges", "mean": 2279.7343035638223, "scale": 2266.6335386271107, "coef": 0.6333861464688999}, {"name": "NumAddOnServices", "mean": 2.0379099815419566, "scale": 1.8475505016147948, "coef": 0.06768433476827031, "source_toggles": ["OnlineSecurity", "OnlineBackup", "DeviceProtection", "TechSupport", "StreamingTV", "StreamingMovies"]}, {"name": "SeniorCitizen", "mean": 0.1621468124378816, "scale": 0.36858543603093713, "coef": 0.08137275455409877}], "categorical": [{"name": "gender", "categories": ["Female", "Male"], "coefs": {"Male": -0.016896155915258698}}, {"name": "Partner", "categories": ["No", "Yes"], "coefs": {"Yes": -0.011700946148431316}}, {"name": "Dependents", "categories": ["No", "Yes"], "coefs": {"Yes": -0.15634286171485792}}, {"name": "PhoneService", "categories": ["No", "Yes"], "coefs": {"Yes": -0.4608360507446292}}, {"name": "MultipleLines", "categories": ["No", "Yes"], "coefs": {"Yes": 0.2356745154093128}}, {"name": "InternetService", "categories": ["DSL", "Fiber optic", "No"], "coefs": {"DSL": -0.08733507729318861, "Fiber optic": 0.7655148553482871, "No": -1.0143530089199904}}, {"name": "OnlineSecurity", "categories": ["No", "Yes"], "coefs": {"Yes": -0.40323602066605807}}, {"name": "OnlineBackup", "categories": ["No", "Yes"], "coefs": {"Yes": -0.16875241592868467}}, {"name": "DeviceProtection", "categories": ["No", "Yes"], "coefs": {"Yes": -0.08131332222199435}}, {"name": "TechSupport", "categories": ["No", "Yes"], "coefs": {"Yes": -0.35939984425215604}}, {"name": "StreamingTV", "categories": ["No", "Yes"], "coefs": {"Yes": 0.2189544800949564}}, {"name": "StreamingMovies", "categories": ["No", "Yes"], "coefs": {"Yes": 0.23370656691968364}}, {"name": "Contract", "categories": ["Month-to-month", "One year", "Two year"], "coefs": {"Month-to-month": 0.5984635716461688, "One year": -0.09524422557075513, "Two year": -0.8393925769403072}}, {"name": "PaperlessBilling", "categories": ["No", "Yes"], "coefs": {"Yes": 0.31278489350039607}}, {"name": "PaymentMethod", "categories": ["Bank transfer (automatic)", "Credit card (automatic)", "Electronic check", "Mailed check"], "coefs": {"Bank transfer (automatic)": -0.13544983411854805, "Credit card (automatic)": -0.1957828565641937, "Electronic check": 0.19256181179252524, "Mailed check": -0.19750235197466273}}], "addon_cols": ["OnlineSecurity", "OnlineBackup", "DeviceProtection", "TechSupport", "StreamingTV", "StreamingMovies"]};
+
+function predictChurnProbability(customer, params) {
+  let logit = params.intercept;
+  for (const nf of params.numeric) {
+    let value;
+    if (nf.source_toggles) {
+      value = nf.source_toggles.filter((c) => customer[c] === "Yes").length;
+    } else {
+      value = customer[nf.name];
+    }
+    const scaled = (value - nf.mean) / nf.scale;
+    logit += scaled * nf.coef;
+  }
+  for (const cf of params.categorical) {
+    let val = customer[cf.name];
+    if (val === "No internet service" || val === "No phone service") val = "No";
+    logit += cf.coefs[val] || 0;
+  }
+  return 1 / (1 + Math.exp(-logit));
+}
+
+function contributions(customer, params) {
+  const items = [];
+  for (const nf of params.numeric) {
+    let value;
+    if (nf.source_toggles) value = nf.source_toggles.filter((c) => customer[c] === "Yes").length;
+    else value = customer[nf.name];
+    const scaled = (value - nf.mean) / nf.scale;
+    items.push({ name: nf.name, value, contribution: scaled * nf.coef });
+  }
+  for (const cf of params.categorical) {
+    let val = customer[cf.name];
+    if (val === "No internet service" || val === "No phone service") val = "No";
+    items.push({ name: cf.name, value: customer[cf.name], contribution: cf.coefs[val] || 0 });
+  }
+  return items;
+}
+
+const LABELS = {
+  tenure: (v) => `Tenure: ${v} mo`,
+  MonthlyCharges: (v) => `Monthly: $${Number(v).toFixed(0)}`,
+  TotalCharges: (v) => `Total billed: $${Number(v).toFixed(0)}`,
+  NumAddOnServices: (v) => `Add-ons: ${v} of 6`,
+  SeniorCitizen: (v) => (v ? "Senior citizen" : "Not a senior"),
+  gender: (v) => (v === "Male" ? "Gender: Male" : "Gender: Female"),
+  Partner: (v) => (v === "Yes" ? "Has partner" : "No partner"),
+  Dependents: (v) => (v === "Yes" ? "Has dependents" : "No dependents"),
+  PhoneService: (v) => (v === "Yes" ? "Has phone service" : "No phone service"),
+  MultipleLines: (v) => (v === "Yes" ? "Multiple phone lines" : "Single phone line"),
+  InternetService: (v) => `Internet: ${v === "No" ? "none" : v}`,
+  OnlineSecurity: (v) => (v === "Yes" ? "Has online security" : "No online security"),
+  OnlineBackup: (v) => (v === "Yes" ? "Has online backup" : "No online backup"),
+  DeviceProtection: (v) => (v === "Yes" ? "Has device protection" : "No device protection"),
+  TechSupport: (v) => (v === "Yes" ? "Has tech support" : "No tech support"),
+  StreamingTV: (v) => (v === "Yes" ? "Streams TV" : "No TV streaming"),
+  StreamingMovies: (v) => (v === "Yes" ? "Streams movies" : "No movie streaming"),
+  Contract: (v) => `Contract: ${v}`,
+  PaperlessBilling: (v) => (v === "Yes" ? "Paperless billing" : "Paper billing"),
+  PaymentMethod: (v) => `Pays via: ${v}`,
+};
+
+function readCustomer() {
+  const phoneOn = document.getElementById("PhoneService").checked;
+  const internet = document.getElementById("InternetService").value;
+  const internetOn = internet !== "No";
+
+  // conditional disabling mirrors real data dependencies
+  document.getElementById("row-MultipleLines").classList.toggle("field-disabled", !phoneOn);
+  document.getElementById("MultipleLines").disabled = !phoneOn;
+  document.querySelectorAll("[data-addon]").forEach((row) => {
+    row.classList.toggle("field-disabled", !internetOn);
+    row.querySelector("input").disabled = !internetOn;
+  });
+
+  const tenure = Number(document.getElementById("tenure").value) || 0;
+  const monthly = Number(document.getElementById("MonthlyCharges").value) || 0;
+  const totalCharges = tenure * monthly;
+  document.getElementById("TotalChargesDisplay").textContent = `$${totalCharges.toFixed(2)}`;
+
+  const yn = (id) => (document.getElementById(id).checked ? "Yes" : "No");
+
+  return {
+    tenure,
+    MonthlyCharges: monthly,
+    TotalCharges: totalCharges,
+    SeniorCitizen: document.getElementById("SeniorCitizen").checked ? 1 : 0,
+    gender: document.getElementById("gender").checked ? "Male" : "Female",
+    Partner: yn("Partner"),
+    Dependents: yn("Dependents"),
+    PhoneService: phoneOn ? "Yes" : "No",
+    MultipleLines: phoneOn ? yn("MultipleLines") : "No",
+    InternetService: internet,
+    OnlineSecurity: internetOn ? yn("OnlineSecurity") : "No",
+    OnlineBackup: internetOn ? yn("OnlineBackup") : "No",
+    DeviceProtection: internetOn ? yn("DeviceProtection") : "No",
+    TechSupport: internetOn ? yn("TechSupport") : "No",
+    StreamingTV: internetOn ? yn("StreamingTV") : "No",
+    StreamingMovies: internetOn ? yn("StreamingMovies") : "No",
+    Contract: document.getElementById("Contract").value,
+    PaperlessBilling: yn("PaperlessBilling"),
+    PaymentMethod: document.getElementById("PaymentMethod").value,
+  };
+}
+
+function tierFor(p) {
+  if (p < 0.3) return { key: "low", label: "Low risk", color: "var(--low)", soft: "var(--low-soft)" };
+  if (p < 0.6) return { key: "medium", label: "Medium risk", color: "var(--medium)", soft: "var(--medium-soft)" };
+  return { key: "high", label: "High risk", color: "var(--high)", soft: "var(--high-soft)" };
+}
+
+const ACTIONS = {
+  low: "No action needed. Account looks stable under current terms — standard service is fine.",
+  medium: "Worth a proactive touch. A loyalty check-in or a soft mention of contract options at the next contact can head off drift.",
+  high: "Flag for retention outreach now. Lead with the contract or service factor below — a targeted offer addressing it outperforms a generic discount.",
+};
+
+function render() {
+  const customer = readCustomer();
+  const p = predictChurnProbability(customer, MODEL_PARAMS);
+  const tier = tierFor(p);
+
+  const scoreEl = document.getElementById("riskScore");
+  scoreEl.textContent = `${Math.round(p * 100)}%`;
+  scoreEl.style.color = tier.color;
+
+  const tierEl = document.getElementById("riskTier");
+  tierEl.textContent = tier.label.toUpperCase();
+  tierEl.style.background = tier.soft;
+  tierEl.style.color = tier.color;
+
+  const fill = document.getElementById("riskMeterFill");
+  fill.style.width = `${Math.max(4, p * 100)}%`;
+  fill.style.background = tier.color;
+
+  const actionCard = document.getElementById("actionCard");
+  actionCard.style.background = tier.soft;
+  actionCard.style.borderColor = tier.color;
+  document.getElementById("actionText").textContent = ACTIONS[tier.key];
+
+  const items = contributions(customer, MODEL_PARAMS)
+    .filter((it) => Math.abs(it.contribution) > 0.001)
+    .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
+    .slice(0, 5);
+  const maxAbs = Math.max(...items.map((it) => Math.abs(it.contribution)), 0.0001);
+
+  const list = document.getElementById("factorsList");
+  list.innerHTML = "";
+  items.forEach((it) => {
+    const labelFn = LABELS[it.name] || ((v) => `${it.name}: ${v}`);
+    const row = document.createElement("div");
+    row.className = "factor-row";
+    const widthPct = (Math.abs(it.contribution) / maxAbs) * 48; // half-track max
+    const isRisk = it.contribution > 0;
+    row.innerHTML = `
+      <div class="factor-label">${labelFn(it.value)}</div>
+      <div class="factor-track">
+        <div class="factor-bar ${isRisk ? "risk" : "protect"}"
+             style="width:${widthPct}%; ${isRisk ? `left:50%` : `left:${50 - widthPct}%`}"></div>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+document.querySelectorAll("input, select").forEach((el) => {
+  el.addEventListener("input", render);
+  el.addEventListener("change", render);
+});
+render();
+</script>
+
+</body>
+</html>
